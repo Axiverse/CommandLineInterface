@@ -8,7 +8,7 @@
     <Company>Axiverse Corporation</Company>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <RepositoryUrl>https://github.com/Axiverse/CommandLineInterface</RepositoryUrl>
-    <PackageTags>cli, commandline, command</PackageTags>
+    <PackageTags>cli;commandline;command</PackageTags>
   </PropertyGroup>
 
 </Project>

@@ -9,6 +9,11 @@ namespace CommandLineInterface
         where T : new()
     {
         /// <summary>
+        /// Gets or sets if generated help is included or not.
+        /// </summary>
+        public bool HasHelp { get; set; } = true;
+
+        /// <summary>
         /// Gets the <see cref="OptionsDefinition"/> for the base argument type <see cref="T" />.
         /// </summary>
         public OptionsDefinition Definition { get; }

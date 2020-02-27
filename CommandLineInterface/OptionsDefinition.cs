@@ -12,9 +12,8 @@ namespace CommandLineInterface
 
         public List<CommandDefinition> Commands { get; } = new List<CommandDefinition>();
 
-        public List<object> PositionalParameters { get; } = new List<object>();
-
-        public List<object> NamedParameters { get; } = new List<object>();
+        public List<Tuple<ParameterAttribute, MemberInfo>> Parameters { get; }
+            = new List<Tuple<ParameterAttribute, MemberInfo>>();
 
         public OptionsDefinition(Type type)
         {
@@ -36,9 +35,47 @@ namespace CommandLineInterface
                     {
                         var c = command.Options.Parse(args.Skip(1).ToArray());
                         SetValue(instance, c, command.Member);
+                        return instance;
                     }
                 }
+            }
 
+            for (int i = 0; i < args.Length; i++)
+            {
+                var arg = args[i];
+
+                if (arg.StartsWith("--"))
+                {
+                    // Look for matching long name.
+                    arg = arg.Substring(2);
+                    string value;
+
+                    if (arg.Contains("="))
+                    {
+                        var split = arg.Split('=');
+                        arg = split.First();
+                        value = string.Join("=", split.Skip(1));
+                    }
+                    else
+                    {
+                        value = args[++i];
+                    }
+
+                    foreach (var parameter in Parameters)
+                    {
+                        if (parameter.Item1.LongName == arg)
+                        {
+                            SetValue(instance, value, parameter.Item2);
+                        }
+                    }
+                }
+                else if (arg.StartsWith("-"))
+                {
+                    // Look for matching short name.
+
+                }
+
+                // Positional parameters.
             }
 
             return instance;
@@ -77,6 +114,11 @@ namespace CommandLineInterface
                     var options = GetDefinition(field.FieldType);
                     arguments.Commands.Add(new CommandDefinition(command.Name, options, field));
                 }
+
+                if (TryGetParameter(field, out var parameter))
+                {
+                    arguments.Parameters.Add(new Tuple<ParameterAttribute, MemberInfo>(parameter, field));
+                }
             }
 
 
@@ -87,6 +129,11 @@ namespace CommandLineInterface
                     var options = GetDefinition(property.PropertyType);
                     arguments.Commands.Add(new CommandDefinition(command.Name, options, property));
                 }
+
+                if (TryGetParameter(property, out var parameter))
+                {
+                    arguments.Parameters.Add(new Tuple<ParameterAttribute, MemberInfo>(parameter, property));
+                }
             }
 
             return arguments;
@@ -95,6 +142,12 @@ namespace CommandLineInterface
         private static bool TryGetCommand(MemberInfo info, out CommandAttribute attribute)
         {
             attribute = info.GetCustomAttribute<CommandAttribute>();
+            return attribute != null;
+        }
+
+        private static bool TryGetParameter(MemberInfo info, out ParameterAttribute attribute)
+        {
+            attribute = info.GetCustomAttribute<ParameterAttribute>();
             return attribute != null;
         }
     }
